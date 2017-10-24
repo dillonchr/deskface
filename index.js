@@ -41,6 +41,7 @@ function takeAndPostPic() {
                             console.error(body);
                         } else {
                             console.log('YES INDEEDY');
+                            goRandomly();
                         }
                     } catch (errj) {
                         console.error('JSON ERROR', errj);
@@ -51,4 +52,8 @@ function takeAndPostPic() {
             }));
 }
 
-setInterval(takeAndPostPic, 1000 * 60 * 15);
+function goRandomly() {
+    setTimeout(takeAndPostPic, (~~(Math.random() * 20) + 5) * 60000);
+}
+
+goRandomly();
