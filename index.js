@@ -3,7 +3,6 @@ const nw = require('node-webcam');
 const { exec } = require('child_process');
 const fs = require('fs');
 const Twitter = require('twitter');
-const { Subject } = require('rxjs');
 const snapshotName = 'snapshot';
 const snapshotPath = snapshotName + '.jpg';
 const lastPhotoPath = 'last-snapshot.jpg';
