@@ -2,16 +2,13 @@
   "name": "deskface",
   "version": "1.0.0",
   "main": "index.js",
-  "license": "MIT",
+  "license": "GPL-2.0",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
     "dotenv": "^4.0.0",
-    "moment": "^2.18.1",
     "node-webcam": "^0.4.3",
-    "redux": "^3.7.2",
-    "request": "^2.81.0",
     "twitter": "^1.7.1"
   }
 }
