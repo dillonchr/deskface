@@ -1,14 +1,10 @@
 require('dotenv').config();
-const nw = require('node-webcam');
 const { exec } = require('child_process');
 const fs = require('fs');
 const Twitter = require('twitter');
 const snapshotName = 'snapshot';
 const snapshotPath = snapshotName + '.jpg';
 const lastPhotoPath = 'last-snapshot.jpg';
-const deleteLastPhoto = () => fs.unlink(lastPhotoPath, moveToLastPhoto);
-const moveToLastPhoto = () => fs.rename(snapshotPath, lastPhotoPath, scheduleNexPhoto);
-const scheduleNexPhoto = () => setTimeout(takePhoto, (~~(Math.random() * 20) + 5) * 60000);
 const client = new Twitter({
     consumer_key: process.env.TWITTER_CONSUMER_KEY,
     consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
@@ -17,25 +13,17 @@ const client = new Twitter({
 });
 
 const takePhoto = () => {
-    nw.capture(snapshotName, {
-        delay: 0,
-        width: 1280,
-        height: 720,
-        quality: 80,
-        saveShots: false,
-        output: 'bmp',
-        callbackReturn: 'location'
-    }, (err, data) => {
-        if (!err && data) {
-            convertPhoto();
+    exec('ffmpeg -f video4linux2 -video_size 640x480 -i /dev/video2 -vframes 1 -y snapshot.png', (err, out, serr) => {
+        if (err) {
+            console.error('takepitchrerr', err);
         } else {
-            console.error('Snapshot Error', err);
-        }
+            convertPhoto();
+	}
     });
 };
 
 const convertPhoto = () => {
-    exec(`magick convert ${snapshotName}.bmp ${snapshotPath}`, (err, out, serr) => {
+    exec(`convert ${snapshotName}.png ${snapshotPath}`, (err, out, serr) => {
         if (err) {
             console.error('could not convert to jpg', err);
         } else {
@@ -45,7 +33,7 @@ const convertPhoto = () => {
 };
 
 const diffPhotos = () => {
-    exec(`magick compare -metric RMSE ${snapshotPath} ${lastPhotoPath} diff.jpg`, (err, out, serr) => {
+    exec(`compare -metric RMSE ${snapshotPath} ${lastPhotoPath} diff.jpg`, (err, out, serr) => {
         let isDiff = true;
         try {
             const diff = +serr.match(/\(([\d.]+)\)/)[1];
@@ -53,6 +41,19 @@ const diffPhotos = () => {
         } catch (ignore) { }
         diffResults(isDiff);
     });
+};
+
+const deleteLastPhoto = () => {
+    fs.unlink(lastPhotoPath, moveToLastPhoto);
+};
+
+const moveToLastPhoto = () => {
+    fs.rename(snapshotPath, lastPhotoPath, scheduleNexPhoto);
+};
+
+const scheduleNexPhoto = () => {
+    const nextPhotoIn = ~~(Math.random() * 10) + 2;
+    setTimeout(takePhoto, nextPhotoIn * 60000);
 };
 
 const diffResults = isDiff => {
@@ -76,7 +77,7 @@ const postPhoto = () => {
                     };
                     client.post('statuses/update', status, (err, t, resp) => {
                         if (!err) {
-                            //    console.log('Photo Tweeted!', t);
+                            //  console.log('Photo Tweeted!', t);
                         } else {
                             console.error('Tweet error', err);
                         }
